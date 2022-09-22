@@ -1,19 +1,22 @@
-import { useState } from 'react'
+import axios from 'axios';
+import { useState, useEffect } from 'react'
 import Filter from './Filter';
 import PersonForm from './PersonForm';
 import Persons from './Persons';
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    // Normally not safe to use Math.random to generate ID b/c there is the potential for a collision. Normally better to generate a UUID or something
-    { name: 'Arto Hellas', phone: '040-123456', id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) },
-    { name: 'Ada Lovelace', phone: '39-44-5323523', id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)  },
-    { name: 'Dan Abramov', phone: '12-43-234345', id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)  },
-    { name: 'Mary Poppendieck', phone: '39-23-6423122', id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)  }
-  ])
-  const [searchText, setSearchText] = useState('');
+  const [persons, setPersons] = useState([])
+  const [searchText, setSearchText] = useState('')
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
+
+  useEffect(() => {
+    axios
+      .get('http://localhost:3001/persons')
+      .then((response) => {
+        setPersons(response.data);
+      });
+  }, []);
 
   const addToPhonebook = (event) => {
     event.preventDefault();
@@ -23,7 +26,7 @@ const App = () => {
     if (nameAlreadyAdded) {
       window.alert(`${newName} is already added to the phonebook`)
     } else {
-      setPersons(persons.concat({ id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) , name: newName, phone: newPhone }));
+      setPersons(persons.concat({ id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) , name: newName, number: newPhone }));
     }
   }
 
