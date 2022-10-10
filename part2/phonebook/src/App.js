@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import Filter from './Filter';
+import Notification from './Notification';
 import PersonForm from './PersonForm';
 import Persons from './Persons';
 import phonebook from './services/phonebook';
+import './App.css';
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -10,6 +12,8 @@ const App = () => {
   const [searchText, setSearchText] = useState('')
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
+  const [notification, setNotification] = useState(null)
+  const [notificationStatus, setNotificationStatus] = useState('success')
 
   useEffect(() => {
     phonebook.getAll().then(res => {
@@ -29,6 +33,14 @@ const App = () => {
 
         phonebook.update(existingPerson.id, updatedPerson).then(person => {
           setPersons(persons.map(p => p.id === existingPerson.id ? updatedPerson : p));
+        }).catch((error) => {
+          console.log("ERROR", error);
+          if (error.response.status === 404) {
+            setNotification(
+              `Information of '${existingPerson.name}' doesn't exist or has already been removed from the server`
+            )
+            setNotificationStatus('error')
+          }
         });
       } else {
         // Do nothing!
@@ -38,8 +50,15 @@ const App = () => {
       const newPerson = { id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) , name: newName, number: newPhone };
 
       phonebook.create(newPerson).then(createdPerson => {
+        setNotification(
+          `Added '${createdPerson.name}'`
+        )
+        setNotificationStatus('success')
+        setTimeout(() => {
+          setNotification(null)
+        }, 5000)
         setPersons(persons.concat(createdPerson));
-      });
+      })
     }
   }
 
@@ -51,6 +70,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notification} notificationClassName={notificationStatus} />
       <Filter onFilter={(event) => setSearchText(event.target.value)}/>
       <h3>Add</h3>
       <PersonForm
