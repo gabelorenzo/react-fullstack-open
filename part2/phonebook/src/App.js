@@ -1,36 +1,52 @@
-import axios from 'axios';
 import { useState, useEffect } from 'react'
 import Filter from './Filter';
 import PersonForm from './PersonForm';
 import Persons from './Persons';
+import phonebook from './services/phonebook';
 
 const App = () => {
   const [persons, setPersons] = useState([])
+  const [filteredPersons, setFilteredPersons] = useState([])
   const [searchText, setSearchText] = useState('')
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then((response) => {
-        setPersons(response.data);
-      });
+    phonebook.getAll().then(res => {
+      setPersons(res)
+      setFilteredPersons(res)
+    })
   }, []);
 
   const addToPhonebook = (event) => {
     event.preventDefault();
 
-    const nameAlreadyAdded = persons.find(p => p.name === newName);
+    const existingPerson = persons.find(p => p.name === newName);
 
-    if (nameAlreadyAdded) {
-      window.alert(`${newName} is already added to the phonebook`)
+    if (existingPerson) {
+      if (window.confirm(`${newName} is already added to the phonebook. Replace the old number with a new one?`)) {
+        const updatedPerson = {...existingPerson, number: newPhone};
+
+        phonebook.update(existingPerson.id, updatedPerson).then(person => {
+          setPersons(persons.map(p => p.id === existingPerson.id ? updatedPerson : p));
+        });
+      } else {
+        // Do nothing!
+      }
+
     } else {
-      setPersons(persons.concat({ id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) , name: newName, number: newPhone }));
+      const newPerson = { id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) , name: newName, number: newPhone };
+
+      phonebook.create(newPerson).then(createdPerson => {
+        setPersons(persons.concat(createdPerson));
+      });
     }
   }
 
-  const phoneBookEntries = searchText ? persons.filter(p => p.name.toLowerCase().includes(searchText.toLowerCase())) : persons;
+  useEffect(() => {
+    const filteredPersons = searchText ? persons.filter(p => p.name.toLowerCase().includes(searchText.toLowerCase())) : persons
+    setFilteredPersons(filteredPersons)
+  }, [persons, searchText])
 
   return (
     <div>
@@ -43,7 +59,9 @@ const App = () => {
         onSubmit={addToPhonebook}
       />
       <h3>Numbers</h3>
-      <Persons phoneBookEntries={phoneBookEntries} />
+      {
+        filteredPersons.length > 0 && <Persons persons={filteredPersons} />
+      }
     </div>
   )
 }
