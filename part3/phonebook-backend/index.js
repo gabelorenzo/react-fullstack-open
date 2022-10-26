@@ -1,5 +1,7 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
+
 const app = express()
 
 let persons = [
@@ -31,6 +33,7 @@ morgan.token('body', (req, res) => JSON.stringify(req.body));
 // Needed to parse the request body as JSON
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(express.json())
+app.use(cors())
 
 app.get('/api/persons', (request, response) => {
   response.json(persons)
@@ -94,7 +97,7 @@ app.get('/api/info', (request, response) => {
   response.send(`<p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>`)
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
