@@ -34,12 +34,15 @@ morgan.token('body', (req, res) => JSON.stringify(req.body));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(express.json())
 app.use(cors())
+app.use(express.static('build'))
 
-app.get('/api/persons', (request, response) => {
+const baseUrl = '/api/persons';
+
+app.get(baseUrl, (request, response) => {
   response.json(persons)
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get(`${baseUrl}/:id`, (request, response) => {
   const id = Number(request.params.id)
   const foundPerson = persons.find(p => p.id === id)
 
@@ -50,7 +53,7 @@ app.get('/api/persons/:id', (request, response) => {
   response.json(foundPerson)
 })
 
-app.delete('/api/persons/:id', (request,response) => {
+app.delete(`${baseUrl}/:id`, (request,response) => {
   const id = Number(request.params.id)
 
   persons = persons.filter(p => p.id !== id)
@@ -58,7 +61,7 @@ app.delete('/api/persons/:id', (request,response) => {
   response.status(204).end()
 })
 
-app.post('/api/persons', (request, response) => {
+app.post(baseUrl, (request, response) => {
   const newId = Math.random(Number.MAX_VALUE)
 
   const body = request.body
