@@ -1,5 +1,8 @@
 const mongoose = require('mongoose')
 
+// NOTE: This file isn't really used in the application. It's just a utility
+// for testing connection to Mongo.
+
 if (process.argv.length < 3) {
   console.log('Please provide the password as an argument: node mongo.js <password>')
   process.exit(1)

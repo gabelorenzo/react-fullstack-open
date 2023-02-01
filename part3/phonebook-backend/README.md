@@ -6,8 +6,17 @@
 - [Node & npm](https://nodejs.org/en/download/) is installed
 - [Fly.io](https://fly.io/) account is created
 - [Flyctl](https://fly.io/docs/flyctl/) (Fly.io CLI) is installed
+- [Mongo Atlas](https://cloud.mongodb.com/) Account is made and Database is created.
 
 ### Initial Setup
+
+Create an `.env` like so:
+```bash
+MONGODB_URI=<MONGODB_ATLAS_URI_HERE>
+PORT=3001
+```
+
+Run the following commands
 
 ```bash
 nvm use # Switches to the Node version specified in the `.nvmrc` file.
