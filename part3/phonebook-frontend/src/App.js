@@ -34,7 +34,6 @@ const App = () => {
         phonebook.update(existingPerson.id, updatedPerson).then(person => {
           setPersons(persons.map(p => p.id === existingPerson.id ? updatedPerson : p));
         }).catch((error) => {
-          console.log("ERROR", error);
           if (error.response.status === 404) {
             setNotification(
               `Information of '${existingPerson.name}' doesn't exist or has already been removed from the server`

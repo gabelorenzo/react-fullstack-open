@@ -12,29 +12,6 @@ const Person = require('./models/person')
 
 const app = express()
 
-let testPersons = [
-  { 
-    "id": 1,
-    "name": "Arto Hellas", 
-    "number": "040-123456"
-  },
-  { 
-    "id": 2,
-    "name": "Ada Lovelace", 
-    "number": "39-44-5323523"
-  },
-  { 
-    "id": 3,
-    "name": "Dan Abramov", 
-    "number": "12-43-234345"
-  },
-  { 
-    "id": 4,
-    "name": "Mary Poppendieck", 
-    "number": "39-23-6423122"
-  }
-]
-
 // Configure Morgan request logger
 morgan.token('body', (req, res) => JSON.stringify(req.body));
 
@@ -47,44 +24,61 @@ app.use(express.static('build'))
 const baseUrl = '/api/persons';
 
 app.get(baseUrl, (request, response) => {
-  if (process.env.MONGODB_URI) {
-    console.log("GET");
-    Person.find().then(result => {
-      response.json(result)
-    })
-  } else {
-    response.json(testPersons)
-  }
+  Person.find().then(result => {
+    response.json(result)
+  })
 })
 
-app.get(`${baseUrl}/:id`, (request, response) => {
-  const id = Number(request.params.id)
+app.get(`${baseUrl}/:id`, (request, response, next) => {
+  const id = request.params.id
 
-  if (process.env.MONGODB_URI) {
-    Person.find({ id }).then(result => {
-      response.json(result)
+  Person.findById(id)
+    .then(person => {
+      if (person) {
+        response.json(person.toJSON())
+      } else {
+        response.status(404).end()
+      }
     })
-  } else {
-    const foundPerson = testPersons.find(p => p.id === id)
-  
-    if (!foundPerson) {
-      return response.status(404).end()
-    }
-  
-    response.json(foundPerson)
-  }
+    .catch(error => next(error))
 })
 
 app.delete(`${baseUrl}/:id`, (request,response) => {
-  const id = Number(request.params.id)
+  const id = request.params.id
 
-  if (process.env.MONGODB_URI) {
-    Person.deleteOne({ id }).then(res => response.status(204).end())
-  } else {
-    testPersons = testPersons.filter(p => p.id !== id)
-  
-    response.status(204).end()
+  Person.findByIdAndDelete(id).then(res => response.status(204).end())
+})
+
+app.put(`${baseUrl}/:id`, (request, response, next) => {
+  const id = request.params.id
+
+  const body = request.body
+  const name = body.name
+  const number = body.number
+
+  const updatedPerson = {
+    name,
+    number
   }
+
+  // TODO: Move to error handler
+  if (!name) {
+    response.status(400).json({
+      error: 'Name is missing.'
+    })
+  }
+
+  if (!number) {
+    response.status(400).json({
+      error: 'Number is missing.'
+    })
+  }
+
+  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true })
+  .then(updatedPerson => {
+    response.json(updatedPerson.toJSON())
+  })
+  .catch(error => next(error))
 })
 
 app.post(baseUrl, (request, response) => {
@@ -106,46 +100,45 @@ app.post(baseUrl, (request, response) => {
     })
   }
 
-  if (process.env.MONGODB_URI) {
-    Person.find({name : name}, function (err, persons) {
-      if (persons.length){
-        response.status(400).json({
-          error: 'Name must be unique'
-        })
-      } else{
-        const person = new Person({
-          ...request.body,
-          id: newId
-        })
-    
-        person.save().then(res => {
-          response.json(res)
-        })
-      }
-    });
-  } else {
-    if (testPersons.find(p => p.name === name)) {
+  Person.find({name : name}, function (err, persons) {
+    if (persons.length){
       response.status(400).json({
         error: 'Name must be unique'
       })
-    }
+    } else{
+      const person = new Person({
+        ...request.body,
+        id: newId
+      })
   
-    const newPerson = {
-      ...request.body,
-      id: newId
+      person.save().then(res => {
+        response.json(res)
+      })
     }
-
-    testPersons.push(newPerson)
-  
-    response.json(newPerson)
-  }
+  });
 })
 
 app.get('/api/info', (request, response) => {
-  response.send(`<p>Phonebook has info for ${testPersons.length} people</p><p>${new Date()}</p>`)
+Person.find({}).then(persons => {
+    console.log(persons)
+    response.send(`
+      <p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>
+    `)
+  })
 })
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
+
+const errorHandler = (error, request, response, next) => {
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler)
