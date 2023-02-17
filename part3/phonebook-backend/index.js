@@ -2,7 +2,6 @@ require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-const mongoose = require('mongoose')
 const Person = require('./models/person')
 
 // DO NOT SAVE YOUR PASSWORD TO GITHUB!!
@@ -13,7 +12,7 @@ const Person = require('./models/person')
 const app = express()
 
 // Configure Morgan request logger
-morgan.token('body', (req, res) => JSON.stringify(req.body));
+morgan.token('body', (req) => JSON.stringify(req.body))
 
 // Needed to parse the request body as JSON
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
@@ -21,7 +20,7 @@ app.use(express.json())
 app.use(cors())
 app.use(express.static('build'))
 
-const baseUrl = '/api/persons';
+const baseUrl = '/api/persons'
 
 app.get(baseUrl, (request, response) => {
   Person.find().then(result => {
@@ -46,7 +45,7 @@ app.get(`${baseUrl}/:id`, (request, response, next) => {
 app.delete(`${baseUrl}/:id`, (request,response) => {
   const id = request.params.id
 
-  Person.findByIdAndDelete(id).then(res => response.status(204).end())
+  Person.findByIdAndDelete(id).then(() => response.status(204).end())
 })
 
 app.put(`${baseUrl}/:id`, (request, response, next) => {
@@ -74,11 +73,11 @@ app.put(`${baseUrl}/:id`, (request, response, next) => {
     })
   }
 
-  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true, runValidators: true, context: 'query' })
-  .then(updatedPerson => {
-    response.json(updatedPerson.toJSON())
-  })
-  .catch(error => next(error))
+  Person.findByIdAndUpdate(id, updatedPerson, { new: true, runValidators: true, context: 'query' })
+    .then(updatedPerson => {
+      response.json(updatedPerson.toJSON())
+    })
+    .catch(error => next(error))
 })
 
 app.post(baseUrl, (request, response, next) => {
@@ -100,7 +99,7 @@ app.post(baseUrl, (request, response, next) => {
     })
   }
 
-  Person.find({name : name}, function (err, persons) {
+  Person.find({ name : name }, function (err, persons) {
     if (persons.length){
       response.status(400).json({
         error: 'Name must be unique'
@@ -110,17 +109,18 @@ app.post(baseUrl, (request, response, next) => {
         ...request.body,
         id: newId
       })
-  
-      person.save().then(res => {
-        response.json(res)
-      })
-      .catch(error => next(error));
+
+      person.save()
+        .then(res => {
+          response.json(res)
+        })
+        .catch(error => next(error))
     }
   })
 })
 
 app.get('/api/info', (request, response) => {
-Person.find({}).then(persons => {
+  Person.find({}).then(persons => {
     console.log(persons)
     response.send(`
       <p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>
@@ -128,7 +128,7 @@ Person.find({}).then(persons => {
   })
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3001 // eslint-disable-line no-undef
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

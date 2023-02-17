@@ -3,14 +3,14 @@ const mongoose = require('mongoose')
 // NOTE: This file isn't really used in the application. It's just a utility
 // for testing connection to Mongo.
 
-if (process.argv.length < 3) {
+if (process.argv.length < 3) { // eslint-disable-line no-undef
   console.log('Please provide the password as an argument: node mongo.js <password>')
-  process.exit(1)
+  process.exit(1) // eslint-disable-line no-undef
 }
 
-const password = process.argv[2]
-const personName = process.argv[3]
-const phoneNumber = process.argv[4]
+const password = process.argv[2] // eslint-disable-line no-undef
+const personName = process.argv[3] // eslint-disable-line no-undef
+const phoneNumber = process.argv[4] // eslint-disable-line no-undef
 
 const url = `mongodb+srv://gabelorenzo:${password}@cluster0.g6jjyr3.mongodb.net/?retryWrites=true&w=majority`
 
@@ -24,7 +24,7 @@ const Person = mongoose.model('Person', personSchema)
 
 mongoose
   .connect(url)
-  .then((result) => {
+  .then(() => {
     console.log('CONNECTED!')
 
     if (personName && phoneNumber) {
@@ -39,7 +39,6 @@ mongoose
         return mongoose.connection.close()
       })
     } else {
-      console.log('phonebook:')
       return Person.find({}).then(result => {
         result.forEach(person => {
           console.log(person.name + ' ' + person.number)
