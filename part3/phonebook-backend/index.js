@@ -74,14 +74,14 @@ app.put(`${baseUrl}/:id`, (request, response, next) => {
     })
   }
 
-  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true })
+  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true, runValidators: true, context: 'query' })
   .then(updatedPerson => {
     response.json(updatedPerson.toJSON())
   })
   .catch(error => next(error))
 })
 
-app.post(baseUrl, (request, response) => {
+app.post(baseUrl, (request, response, next) => {
   const newId = Math.random(Number.MAX_VALUE)
 
   const body = request.body
@@ -114,8 +114,9 @@ app.post(baseUrl, (request, response) => {
       person.save().then(res => {
         response.json(res)
       })
+      .catch(error => next(error));
     }
-  });
+  })
 })
 
 app.get('/api/info', (request, response) => {
@@ -135,8 +136,9 @@ app.listen(PORT, () => {
 const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
-  } 
-
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
   next(error)
 }
 

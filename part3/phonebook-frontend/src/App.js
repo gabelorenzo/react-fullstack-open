@@ -48,16 +48,21 @@ const App = () => {
     } else {
       const newPerson = { id: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) , name: newName, number: newPhone };
 
-      phonebook.create(newPerson).then(createdPerson => {
-        setNotification(
-          `Added '${createdPerson.name}'`
-        )
-        setNotificationStatus('success')
-        setTimeout(() => {
-          setNotification(null)
-        }, 5000)
-        setPersons(persons.concat(createdPerson));
-      })
+      phonebook.create(newPerson)
+        .then(createdPerson => {
+          setNotification(
+            `Added '${createdPerson.name}'`
+          )
+          setNotificationStatus('success')
+          setTimeout(() => {
+            setNotification(null)
+          }, 5000)
+          setPersons(persons.concat(createdPerson));
+        })
+        .catch(error => {
+          setNotification(error.response.data.error)
+          setNotificationStatus('error')
+        })
     }
   }
 
