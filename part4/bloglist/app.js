@@ -28,6 +28,27 @@ app.post("/api/blogs", async (request, response) => {
   response.status(201).json(result)
 });
 
+app.delete("/api/blogs/:id", async (request, response) => {
+  const id = request.params.id
+  await Blog.findByIdAndDelete(id)
+  
+  response.status(204).end()
+});
+
+app.put("/api/blogs/:id", async (request, response) => {
+  const id = request.params.id
+
+  const body = request.body
+
+  const updatedBlog = {
+    likes: body.likes
+  }
+
+  const updatedResult = await Blog.findByIdAndUpdate(id, updatedBlog, { new: true });
+  
+  response.status(200).json(updatedResult)
+});
+
 
 const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError') {
